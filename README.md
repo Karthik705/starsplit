@@ -10,6 +10,7 @@ Most expense splitters show you a list of numbers. Starsplit turns each group in
 
 ## Features
 
+- **iOS/macOS-inspired design**: system typography, automatic light/dark mode (plus a manual toggle), translucent nav bar with a collapsing large title, sliding segmented controls, iOS-style switches, a bottom-sheet editor, and spring animations. Uses the View Transitions API where supported and honours `prefers-reduced-motion`.
 - Create a group ("constellation") with a shareable 6-character code. No sign-up needed.
 - **Four ways to split**: equally, exact amounts, percentages, or shares (e.g. 2 nights vs 1 night), with live per-person previews. Edit any expense afterwards.
 - **Interactive constellation**: drag the stars around; comets flow along each debt; star size and glow reflect balance. Layout is remembered per group.
@@ -62,6 +63,15 @@ npm test
 | GET    | `/api/groups/:code/events` | Server-sent events stream for live updates |
 | POST   | `/api/groups/:code/settle` | Record payment `{from, to, amount}` |
 | DELETE | `/api/groups/:code/expenses/:id` | Remove an entry |
+
+## Deploy
+
+The app is a single Node process with a SQLite file, so any host that runs Node works.
+
+- **Render**: `render.yaml` is included (free plan, health check at `/healthz`). Note that the free plan has an ephemeral disk, so data resets on redeploy; attach a persistent disk and set `DB_FILE=/var/data/starsplit.db` to keep it.
+- **Docker**: `docker build -t starsplit . && docker run -p 3000:3000 -v starsplit-data:/data starsplit`
+
+Production notes: per-IP rate limiting on writes, security headers, `trust proxy` for correct client IPs, and SSE responses are unbuffered so live sync works behind proxies.
 
 ## Project layout
 
