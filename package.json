@@ -1,0 +1,22 @@
+{
+  "name": "starsplit",
+  "version": "1.0.0",
+  "description": "Split expenses with friends. Watch the debt web untangle into a constellation.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --no-warnings server.js",
+    "dev": "node --no-warnings --watch server.js",
+    "test": "node --no-warnings --test"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Karthik705/starsplit.git"
+  }
+}
