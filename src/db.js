@@ -2,7 +2,7 @@ const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 const fs = require('fs');
 
-const file = process.env.DB_FILE || path.join(__dirname, 'data', 'starsplit.db');
+const file = process.env.DB_FILE || path.join(__dirname, '..', 'data', 'starsplit.db');
 if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
 
 const db = new DatabaseSync(file);

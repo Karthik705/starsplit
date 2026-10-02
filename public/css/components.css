@@ -1,0 +1,81 @@
+/* ---------- controls ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 20px; border-radius: 999px;
+  background: var(--blue); color: #fff; font-weight: 600; font-size: 1rem;
+  transition: transform 0.25s var(--ease), opacity 0.2s, filter 0.2s;
+}
+.btn:hover { filter: brightness(1.08); }
+.btn:active { transform: scale(0.95); opacity: 0.85; }
+.btn:disabled { opacity: 0.45; pointer-events: none; }
+.btn.tinted { background: color-mix(in srgb, var(--blue) 14%, transparent); color: var(--blue); }
+.btn.gray { background: var(--fill); color: var(--label); }
+.btn.sm { padding: 6px 14px; font-size: 0.88rem; }
+.btn.big { padding: 14px 28px; font-size: 1.05rem; }
+.btn.block { width: 100%; }
+.plain { color: var(--blue); font-size: 1.05rem; padding: 6px 4px; transition: opacity 0.15s; }
+.plain:active { opacity: 0.4; }
+.plain.strong { font-weight: 600; }
+.icon-btn { color: var(--label-3); font-size: 1rem; width: 30px; height: 30px; border-radius: 50%; transition: all 0.2s; }
+.icon-btn:hover { color: var(--red); background: color-mix(in srgb, var(--red) 12%, transparent); }
+.linkish { color: var(--blue); font-size: inherit; }
+
+input, select {
+  width: 100%; font: inherit; color: var(--label); background: var(--fill); border: 0; border-radius: 12px;
+  padding: 11px 14px; outline: none; transition: box-shadow 0.2s, background 0.2s; appearance: none; -webkit-appearance: none;
+}
+input:focus, select:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 35%, transparent); }
+input::placeholder { color: var(--label-3); }
+
+/* segmented control with a sliding thumb */
+.seg { position: relative; display: inline-flex; background: var(--fill); border-radius: 10px; padding: 2px; }
+.seg .thumb { position: absolute; top: 2px; bottom: 2px; left: 0; width: 0; border-radius: 8px; background: var(--thumb, var(--card)); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18), 0 0 0 0.5px rgba(0, 0, 0, 0.04); pointer-events: none; }
+.seg.ready .thumb { transition: transform 0.5s var(--ease), width 0.5s var(--ease); }
+.seg button { position: relative; z-index: 1; flex: 1; padding: 6px 16px; font-size: 0.88rem; font-weight: 500; border-radius: 8px; color: var(--label); white-space: nowrap; transition: opacity 0.2s; }
+.seg button:not(.on) { opacity: 0.75; }
+.seg button.on { font-weight: 600; }
+.seg.full { display: flex; width: 100%; }
+
+/* iOS switch */
+.switch { position: relative; width: 51px; height: 31px; flex: none; }
+.switch input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; padding: 0; cursor: pointer; z-index: 1; }
+.switch i { position: absolute; inset: 0; border-radius: 999px; background: var(--fill-2); transition: background 0.3s; }
+.switch i::after { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); transition: transform 0.35s var(--pop), width 0.2s; }
+.switch input:checked + i { background: var(--green); }
+.switch input:checked + i::after { transform: translateX(20px); }
+.switch input:active + i::after { width: 32px; }
+.switch input:checked:active + i::after { transform: translateX(15px); }
+.switch input:focus-visible + i { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* ---------- surfaces ---------- */
+.card { background: var(--card); border-radius: 22px; padding: 20px; box-shadow: var(--shadow); }
+.card h2 { font-size: 1.25rem; font-weight: 700; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.section-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--label-2); margin: 20px 16px 8px; }
+.list { background: var(--card-2); border-radius: 16px; overflow: hidden; }
+.card > .list { background: var(--card-2); }
+.row-item { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 6px 16px; position: relative; }
+.row-item + .row-item::before { content: ''; position: absolute; top: 0; left: 16px; right: 0; height: 0.5px; background: var(--sep); }
+.row-item > .lbl { flex: none; min-width: 84px; }
+.row-item input, .row-item select { background: transparent; text-align: right; padding: 8px 0; border-radius: 0; box-shadow: none !important; }
+.row-item input:focus, .row-item select:focus { color: var(--blue); }
+.row-item.link { color: var(--blue); cursor: pointer; font-weight: 500; }
+
+.avatar { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; flex: none; font-size: 0.8rem; font-weight: 700; color: #fff; background: var(--c); box-shadow: inset 0 -6px 12px rgba(0, 0, 0, 0.12); }
+.avatar.sm { width: 22px; height: 22px; font-size: 0.65rem; }
+.tile-ico { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; font-size: 1.15rem; flex: none; background: color-mix(in srgb, var(--tint, var(--label-3)) 16%, transparent); }
+
+
+.btn.danger { background: var(--red); }
+.btn.danger-tint { background: color-mix(in srgb, var(--red) 14%, transparent); color: var(--red); margin-top: 8px; }
+.btn:focus-visible, .plain:focus-visible, .chip:focus-visible, .linkish:focus-visible, .icon-btn:focus-visible, .nav-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.icon-btn:disabled { opacity: 0.3; pointer-events: none; }
+.linkish.small { font-size: 0.85rem; }
+.row-item input.left, input.left { text-align: left; }
+button.row-item { width: 100%; text-align: left; }
+.mono { font-family: ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 0.12em; }
+.avatar.xs { width: 16px; height: 16px; font-size: 0.55rem; vertical-align: -3px; box-shadow: none; }
+.chip { display: inline-flex; gap: 6px; align-items: center; padding: 6px 12px; border-radius: 999px; background: var(--fill); font-size: 0.82rem; font-weight: 500; color: var(--label-2); transition: transform 0.2s var(--ease), background 0.2s; }
+.chip:hover { background: var(--fill-2); }
+.chip:active { transform: scale(0.95); }
+.chip strong { color: var(--label); }
+.chip-sep { opacity: 0.5; }

@@ -1,0 +1,52 @@
+/* ---------- insights ---------- */
+.insights { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.insights .wide { grid-column: 1 / -1; }
+.donut-wrap { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+svg.donut { width: 190px; flex: none; }
+.arc { transition: opacity 0.2s, stroke-width 0.25s var(--ease); }
+.donut:hover .arc { opacity: 0.45; }
+.donut .arc:hover { opacity: 1; stroke-width: 30; }
+.anim .arc { animation: arc 1s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms); }
+@keyframes arc { from { stroke-dasharray: 0 1000; } }
+.donut-total { font-size: 21px; font-weight: 700; fill: var(--label); text-anchor: middle; letter-spacing: -0.02em; }
+.donut-sub { font-size: 9px; fill: var(--label-2); text-anchor: middle; }
+.legend { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 200px; display: grid; gap: 10px; }
+.legend li { display: grid; grid-template-columns: 12px 1fr auto 38px; gap: 10px; align-items: center; font-size: 0.92rem; }
+.legend li em { font-style: normal; color: var(--label-2); text-align: right; }
+.legend i { width: 12px; height: 12px; border-radius: 4px; display: inline-block; background: var(--k); }
+.legend.inline { display: flex; gap: 18px; margin-bottom: 14px; font-size: 0.85rem; color: var(--label-2); }
+.legend.inline i { margin-right: 6px; vertical-align: -1px; }
+svg.timeline { width: 100%; height: auto; display: block; }
+.grid { stroke: var(--sep); stroke-dasharray: 3 4; }
+.axis { font-size: 10.5px; fill: var(--label-2); }
+.cross { stroke: var(--label-3); stroke-width: 1; }
+.mark { fill: var(--s1); stroke: var(--card); stroke-width: 3; pointer-events: none; }
+.tl-line { stroke: var(--s1); }
+.tl-dot { fill: var(--s1); stroke: var(--card); stroke-width: 2; }
+.anim .tl-line { stroke-dasharray: 1; animation: draw 1.4s var(--ease) both; stroke-dashoffset: 1; }
+.anim .tl-area, .anim .tl-dot { animation: fade 1s 0.6s both; }
+.bars { display: grid; gap: 16px; }
+.bar-row { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: center; }
+.bar-name { display: flex; align-items: center; gap: 8px; font-weight: 500; overflow: hidden; }
+.bar-name span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-tracks { display: grid; gap: 5px; }
+.bar-line { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--label-2); }
+.bar { height: 10px; border-radius: 0 5px 5px 0; min-width: 2px; background: var(--k); }
+.anim .bar { animation: grow 1s var(--ease) both; animation-delay: calc(var(--i, 0) * 80ms); }
+@keyframes grow { from { width: 0; } }
+
+/* ---------- wrapped ---------- */
+.wrapped { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+.award {
+  position: relative; overflow: hidden; padding: 22px; border-radius: 26px; min-height: 200px;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--c) 26%, var(--card)), var(--card) 75%);
+  box-shadow: var(--shadow); transition: transform 0.3s var(--ease); will-change: transform;
+}
+.award::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at var(--mx, 80%) var(--my, 0%), rgba(255, 255, 255, 0.28), transparent 55%); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.award:hover::after { opacity: 1; }
+.award-ico { font-size: 2.2rem; }
+.award-label { margin-top: 12px; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: var(--c); }
+.award-big { font-size: 1.75rem; font-weight: 700; line-height: 1.12; margin: 6px 0; letter-spacing: -0.03em; overflow-wrap: anywhere; }
+.award-sub { color: var(--label-2); font-size: 0.9rem; }
+
+.legend li span { white-space: nowrap; }

@@ -6,4 +6,4 @@ COPY . .
 ENV NODE_ENV=production PORT=3000 DB_FILE=/data/starsplit.db
 VOLUME /data
 EXPOSE 3000
-CMD ["node", "--no-warnings", "server.js"]
+CMD ["node", "--no-warnings", "src/server.js"]

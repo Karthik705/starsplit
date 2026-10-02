@@ -11,6 +11,8 @@ Most expense splitters show you a list of numbers. Starsplit turns each group in
 ## Features
 
 - **iOS/macOS-inspired design**: system typography, automatic light/dark mode (plus a manual toggle), translucent nav bar with a collapsing large title, sliding segmented controls, iOS-style switches, a bottom-sheet editor, and spring animations. Uses the View Transitions API where supported and honours `prefers-reduced-motion`.
+- **Manage people**: rename the group, add, rename or remove people (removal is blocked while someone is part of an expense).
+- **Undo** for deleted expenses and payments, a searchable ledger grouped by day, and an installable web app (manifest + icon).
 - Create a group ("constellation") with a shareable 6-character code. No sign-up needed.
 - **Four ways to split**: equally, exact amounts, percentages, or shares (e.g. 2 nights vs 1 night), with live per-person previews. Edit any expense afterwards.
 - **Interactive constellation**: drag the stars around; comets flow along each debt; star size and glow reflect balance. Layout is remembered per group.
@@ -57,7 +59,10 @@ npm test
 |--------|-------|---------|
 | POST   | `/api/groups` | Create group `{name, currency, members[]}` → `{code}` |
 | GET    | `/api/groups/:code` | Members, ledger, balances, raw and simplified debts |
+| PATCH  | `/api/groups/:code` | Rename group `{name}` |
 | POST   | `/api/groups/:code/members` | Add a person |
+| PATCH  | `/api/groups/:code/members/:id` | Rename a person |
+| DELETE | `/api/groups/:code/members/:id` | Remove a person (only if not in any expense) |
 | POST   | `/api/groups/:code/expenses` | Add expense `{description, amount, paidBy, category, date, splitType, split}` |
 | PUT    | `/api/groups/:code/expenses/:id` | Edit an expense (same body) |
 | GET    | `/api/groups/:code/events` | Server-sent events stream for live updates |
@@ -76,13 +81,23 @@ Production notes: per-IP rate limiting on writes, security headers, `trust proxy
 ## Project layout
 
 ```
-server.js     Express routes + validation
-db.js         SQLite schema + transaction helper
-balance.js    Pure money logic (split, balances, simplify)
-public/       index.html, style.css, app.js (SPA)
-test/         balance.test.js, api.test.js
+src/
+  server.js      Entry point (listen, graceful shutdown)
+  app.js         Express setup: headers, static files, error handling
+  routes.js      REST routes for groups, members and the ledger
+  store.js       Prepared SQL queries + derived group state
+  validate.js    Input cleaning and expense parsing
+  balance.js     Pure money logic (split, balances, simplify)
+  live.js        Server-sent events rooms
+  db.js          SQLite schema + transaction helper
+public/
+  index.html     Shell
+  css/           tokens, base, components, home, group, charts, sheet, responsive
+  js/            ES modules: main (router), home, group, sky, constellation,
+                 insights, wrapped, expense-sheet, people-sheet, actions, ui, util
+test/            balance.test.js, api.test.js
 ```
 
 ## Ideas for next steps
 
-Unequal / percentage splits, real-time sync (SSE), exporting a trip summary, user accounts.
+Multi-currency groups, receipt photos, optional accounts, offline queueing of edits.

@@ -2,10 +2,10 @@
   "name": "starsplit",
   "version": "1.0.0",
   "description": "Split expenses with friends. Watch the debt web untangle into a constellation.",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node --no-warnings server.js",
-    "dev": "node --no-warnings --watch server.js",
+    "start": "node --no-warnings src/server.js",
+    "dev": "node --no-warnings --watch src/server.js",
     "test": "node --no-warnings --test"
   },
   "engines": {

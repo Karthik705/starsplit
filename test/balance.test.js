@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { splitEqually, computeNet, pairwiseDebts, simplify } = require('../balance');
+const { splitEqually, computeNet, pairwiseDebts, simplify } = require('../src/balance');
 
 const members = [{ id: 1 }, { id: 2 }, { id: 3 }];
 const exp = (paid_by, amount_cents, ids) => ({ paid_by, amount_cents, splits: splitEqually(amount_cents, ids) });
@@ -37,7 +37,7 @@ test('pairwise nets opposite debts between the same two people', () => {
   assert.deepEqual(d, [{ from: 2, to: 1, amount_cents: 300 }]);
 });
 
-const { buildSplits } = require('../balance');
+const { buildSplits } = require('../src/balance');
 const total = (s) => s.reduce((a, x) => a + x.share_cents, 0);
 
 test('percent split uses largest remainder and sums exactly', () => {

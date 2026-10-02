@@ -1,7 +1,7 @@
 process.env.DB_FILE = ':memory:';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const app = require('../server');
+const app = require('../src/app');
 
 let base, server;
 test.before(async () => {
@@ -89,4 +89,29 @@ test('unequal splits and editing an expense', async () => {
   assert.equal(edited.data.expenses[0].description, 'Hotel (fixed)');
   assert.equal(edited.data.net[b], 12000 - 3000);
   assert.equal(edited.data.net[c], -6000);
+});
+
+test('rename the group, rename and remove people', async () => {
+  const { data } = await call('/groups', 'POST', { name: 'Old name', members: ['a', 'b', 'c'] });
+  const code = data.code;
+  const { data: s } = await call('/groups/' + code);
+  const [a, b, c] = s.members.map((m) => m.id);
+
+  const renamed = await call('/groups/' + code, 'PATCH', { name: 'New name' });
+  assert.equal(renamed.data.group.name, 'New name');
+
+  const person = await call(`/groups/${code}/members/${b}`, 'PATCH', { name: 'Bea' });
+  assert.equal(person.data.members.find((m) => m.id === b).name, 'Bea');
+  const clash = await call(`/groups/${code}/members/${b}`, 'PATCH', { name: 'A' });
+  assert.equal(clash.status, 400);
+
+  // someone in the ledger can't be removed; someone untouched can
+  await call(`/groups/${code}/expenses`, 'POST', { description: 'Lunch', amount: 20, paidBy: a, splitAmong: [a, b] });
+  assert.equal((await call(`/groups/${code}/members/${b}`, 'DELETE')).status, 409);
+  const removed = await call(`/groups/${code}/members/${c}`, 'DELETE');
+  assert.equal(removed.status, 200);
+  assert.equal(removed.data.members.length, 2);
+
+  // and the group never drops below two people
+  assert.equal((await call(`/groups/${code}/members/${a}`, 'DELETE')).status, 400);
 });
