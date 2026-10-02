@@ -57,3 +57,7 @@
 .group-card-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .group-card-text b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.05rem; }
 .group-card-total { font-weight: 700; }
+.btn.google { background: var(--card-2); color: var(--label); box-shadow: inset 0 0 0 1px var(--sep); gap: 10px; margin-bottom: 4px; }
+.or { display: flex; align-items: center; gap: 12px; margin: 16px 0; color: var(--label-3); font-size: 0.8rem; }
+.or::before, .or::after { content: ''; flex: 1; height: 0.5px; background: var(--sep); }
+.forgot { text-align: right; margin: 10px 4px 0; }

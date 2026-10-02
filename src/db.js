@@ -1,15 +1,21 @@
-const { DatabaseSync } = require('node:sqlite');
+// Database: libSQL. Locally a SQLite file; in production a hosted Turso database
+// (set TURSO_DATABASE_URL + TURSO_AUTH_TOKEN), so data survives redeploys.
+const { createClient } = require('@libsql/client');
 const path = require('path');
 const fs = require('fs');
 
-const file = process.env.DB_FILE || path.join(__dirname, '..', 'data', 'starsplit.db');
-if (file !== ':memory:') fs.mkdirSync(path.dirname(file), { recursive: true });
+function connect() {
+  if (process.env.TURSO_DATABASE_URL) {
+    return createClient({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN });
+  }
+  const file = process.env.DB_FILE || path.join(__dirname, '..', 'data', 'starsplit.db');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  return createClient({ url: 'file:' + file });
+}
 
-const db = new DatabaseSync(file);
-db.exec(`
-  PRAGMA journal_mode = WAL;
-  PRAGMA foreign_keys = ON;
+const client = connect();
 
+const SCHEMA = `
   CREATE TABLE IF NOT EXISTS groups (
     id INTEGER PRIMARY KEY,
     code TEXT UNIQUE NOT NULL,
@@ -46,11 +52,17 @@ db.exec(`
     id INTEGER PRIMARY KEY,
     email TEXT UNIQUE NOT NULL COLLATE NOCASE,
     name TEXT NOT NULL,
-    password_hash TEXT NOT NULL,
+    password_hash TEXT NOT NULL DEFAULT '', -- '' for Google-only accounts
+    google_sub TEXT UNIQUE,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
-  -- only a hash of the session token is stored, so a leaked database can't be used to log in
+  -- only hashes of session / reset tokens are stored, so a leaked database can't be used to log in
   CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS password_resets (
     token_hash TEXT PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     expires_at INTEGER NOT NULL
@@ -62,25 +74,45 @@ db.exec(`
     joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, group_id)
   );
-`);
+`;
 
-// Migration for databases created before expenses had a spend date.
-if (!db.prepare('PRAGMA table_info(expenses)').all().some((c) => c.name === 'spent_on')) {
-  db.exec('ALTER TABLE expenses ADD COLUMN spent_on TEXT');
-  db.exec('UPDATE expenses SET spent_on = date(created_at)');
-}
+// Columns added after the first release; ALTER is skipped when the column exists.
+const MIGRATIONS = [
+  ['expenses', 'spent_on', 'ALTER TABLE expenses ADD COLUMN spent_on TEXT'],
+  ['users', 'google_sub', 'ALTER TABLE users ADD COLUMN google_sub TEXT'],
+];
 
-/** Run `fn` inside a transaction; roll back if it throws. */
-function tx(fn) {
-  db.exec('BEGIN');
-  try {
-    const result = fn();
-    db.exec('COMMIT');
-    return result;
-  } catch (err) {
-    db.exec('ROLLBACK');
-    throw err;
+const ready = (async () => {
+  await client.executeMultiple(SCHEMA);
+  for (const [table, column, sql] of MIGRATIONS) {
+    const cols = (await client.execute(`PRAGMA table_info(${table})`)).rows.map((r) => r.name);
+    if (!cols.includes(column)) await client.execute(sql);
   }
-}
+  await client.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google ON users(google_sub)');
+  await client.execute('PRAGMA foreign_keys = ON');
+})();
 
-module.exports = { db, tx };
+const plain = (row) => (row ? { ...row } : row);
+const exec = async (sql, args = []) => { await ready; return client.execute({ sql, args }); };
+
+const db = {
+  ready,
+  all: async (sql, args) => (await exec(sql, args)).rows.map(plain),
+  get: async (sql, args) => plain((await exec(sql, args)).rows[0]),
+  /** Returns { changes, lastId }. */
+  run: async (sql, args) => {
+    const r = await exec(sql, args);
+    return { changes: r.rowsAffected, lastId: r.lastInsertRowid === undefined ? undefined : Number(r.lastInsertRowid) };
+  },
+  /**
+   * Run several statements atomically (all or nothing). Statements are [sql, args] pairs.
+   * Inside one batch, `last_insert_rowid()` refers to the previous INSERT, which lets
+   * a parent row and its children be written together.
+   */
+  batch: async (stmts) => {
+    await ready;
+    return client.batch(stmts.map(([sql, args = []]) => ({ sql, args })), 'write');
+  },
+};
+
+module.exports = { db };

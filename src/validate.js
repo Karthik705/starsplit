@@ -26,8 +26,8 @@ const cleanDate = (v) => {
  * where `split` maps memberId -> value (amount / percent / shares; ignored for equal).
  * For backwards compatibility `splitAmong: [ids]` means an equal split.
  */
-function parseExpense(body, groupId) {
-  const valid = memberIds(groupId);
+async function parseExpense(body, groupId) {
+  const valid = await memberIds(groupId);
   const description = cleanText(body.description, 60);
   const category = CATEGORIES.includes(body.category) ? body.category : 'other';
   const paidBy = Number(body.paidBy);

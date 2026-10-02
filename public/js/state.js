@@ -1,6 +1,7 @@
 // Shared, mutable UI state. Modules read and write these fields directly.
 export const state = {
   user: null, // the logged-in account, or null
+  google: false, // whether 'Continue with Google' is configured on the server
   g: null, // current group state from the API
   mode: 'raw', // constellation view: 'raw' (tangled) | 'simplified' (untangled)
   tab: 'sky', // 'sky' | 'insights' | 'wrapped'

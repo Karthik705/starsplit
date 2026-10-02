@@ -11,3 +11,16 @@ services:
         value: 22.13.0
       - key: NODE_ENV
         value: production
+      - key: APP_URL
+        value: https://starsplit.onrender.com
+      # secrets: set their values in the Render dashboard (Environment tab)
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false

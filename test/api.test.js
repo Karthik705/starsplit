@@ -1,4 +1,12 @@
-process.env.DB_FILE = ':memory:';
+const os = require('os');
+const path = require('path');
+const fs = require('fs');
+process.env.NODE_ENV = 'test';
+process.env.DB_FILE = path.join(os.tmpdir(), `starsplit-test-${process.pid}.db`);
+for (const f of fs.readdirSync(os.tmpdir()).filter((f) => f.startsWith(`starsplit-test-${process.pid}`))) fs.rmSync(path.join(os.tmpdir(), f));
+const mail = require('../src/mail');
+const outbox = [];
+mail.sendMail = async (m) => { outbox.push(m); };
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('../src/app');
@@ -8,7 +16,7 @@ test.before(async () => {
   server = app.listen(0);
   base = `http://localhost:${server.address().port}/api`;
 });
-test.after(() => server.close());
+test.after(() => { server.close(); for (const f of fs.readdirSync(os.tmpdir()).filter((f) => f.startsWith(`starsplit-test-${process.pid}`))) { try { fs.rmSync(path.join(os.tmpdir(), f), { force: true }); } catch { /* still open on Windows */ } } });
 
 let cookie = '';
 const call = async (path, method = 'GET', body, { jar = true } = {}) => {
@@ -38,6 +46,30 @@ test('accounts: signup, me, logout, login, and the API is locked without a sessi
   assert.equal((await call('/auth/me')).data.user, null);
   assert.equal((await call('/auth/login', 'POST', { email: 'ana@example.com', password: 'wrong pass' })).status, 401);
   assert.equal((await call('/auth/login', 'POST', { email: 'ana@example.com', password: 'correct horse' })).status, 200);
+});
+
+test('forgot and reset password', async () => {
+  const before = cookie;
+  cookie = '';
+  await call('/auth/signup', 'POST', { name: 'Cy', email: 'cy@example.com', password: 'first password' });
+  cookie = '';
+  // unknown emails get the same answer and no email is sent
+  assert.equal((await call('/auth/forgot', 'POST', { email: 'nobody@example.com' })).status, 200);
+  assert.equal(outbox.length, 0);
+  await call('/auth/forgot', 'POST', { email: 'CY@example.com' });
+  assert.equal(outbox.length, 1);
+  const token = outbox[0].text.match(/#\/reset\/([\w-]+)/)[1];
+
+  assert.equal((await call('/auth/reset', 'POST', { token: 'nope', password: 'new password 1' })).status, 400);
+  const reset = await call('/auth/reset', 'POST', { token, password: 'new password 1' });
+  assert.equal(reset.status, 200);
+  assert.equal(reset.data.user.email, 'cy@example.com');
+  // the link works once
+  assert.equal((await call('/auth/reset', 'POST', { token, password: 'again password' })).status, 400);
+  cookie = '';
+  assert.equal((await call('/auth/login', 'POST', { email: 'cy@example.com', password: 'first password' })).status, 401);
+  assert.equal((await call('/auth/login', 'POST', { email: 'cy@example.com', password: 'new password 1' })).status, 200);
+  cookie = before;
 });
 
 test('groups are linked to the accounts that create or open them', async () => {

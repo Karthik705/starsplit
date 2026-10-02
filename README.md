@@ -12,6 +12,7 @@ Most expense splitters show you a list of numbers. Starsplit turns each group in
 
 - **iOS/macOS-inspired design**: system typography, automatic light/dark mode (plus a manual toggle), translucent nav bar with a collapsing large title, sliding segmented controls, iOS-style switches, a bottom-sheet editor, and spring animations. Uses the View Transitions API where supported and honours `prefers-reduced-motion`.
 - **Accounts**: sign up / log in with email and password. Passwords are hashed with scrypt, sessions are random tokens in an httpOnly, SameSite cookie (only a SHA-256 of the token is stored), login is rate-limited and timing-safe. Your groups are saved to your account; opening an invite code adds that group to it.
+- **Sign in with Google** (OAuth 2.0 authorization-code flow with a state cookie, no SDK) and **forgot password** (single-use, 30-minute reset links emailed via Resend; resetting signs out all other sessions).
 - **Landing page** for visitors, and a personal dashboard of your groups once logged in.
 - **Manage people**: rename the group, add, rename or remove people (removal is blocked while someone is part of an expense).
 - **Undo** for deleted expenses and payments, a searchable ledger grouped by day, and an installable web app (manifest + icon).
@@ -30,7 +31,7 @@ Most expense splitters show you a list of numbers. Starsplit turns each group in
 | Layer    | Choice |
 |----------|--------|
 | Backend  | Node.js + Express (REST JSON API) |
-| Database | SQLite via Node's built-in `node:sqlite` (zero native deps) |
+| Database | SQLite / libSQL via `@libsql/client`: a local file in development, a hosted [Turso](https://turso.tech) database in production |
 | Frontend | Vanilla JS, hash routing, hand-written SVG and CSS (no build step) |
 | Realtime | Server-sent events (`EventSource`), no WebSocket library needed |
 | Tests    | `node:test` (unit tests for money logic + API integration tests) |
@@ -64,6 +65,9 @@ Everything except `/api/auth/*` requires a logged-in session.
 | POST   | `/api/auth/signup` | Create account `{name, email, password}`, sets session cookie |
 | POST   | `/api/auth/login` | Log in `{email, password}` |
 | POST   | `/api/auth/logout` | End the session |
+| POST   | `/api/auth/forgot` | Email a reset link `{email}` (same answer whether or not the account exists) |
+| POST   | `/api/auth/reset` | Set a new password `{token, password}` |
+| GET    | `/api/auth/google` | Start Sign in with Google |
 | GET    | `/api/auth/me` | Current user or `null` |
 | GET    | `/api/me/groups` | Your groups with totals |
 | DELETE | `/api/me/groups/:code` | Remove a group from your account |
@@ -78,6 +82,17 @@ Everything except `/api/auth/*` requires a logged-in session.
 | GET    | `/api/groups/:code/events` | Server-sent events stream for live updates |
 | POST   | `/api/groups/:code/settle` | Record payment `{from, to, amount}` |
 | DELETE | `/api/groups/:code/expenses/:id` | Remove an entry |
+
+## Configuration
+
+All optional locally (see `.env.example`):
+
+| Variable | Purpose |
+|----------|---------|
+| `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` | Hosted database; without them a local SQLite file is used |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Enables "Continue with Google" |
+| `RESEND_API_KEY`, `MAIL_FROM` | Sends reset emails; without it they're printed to the console |
+| `APP_URL` | Public URL used in emails and the OAuth redirect |
 
 ## Deploy
 
