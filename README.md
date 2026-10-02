@@ -11,6 +11,8 @@ Most expense splitters show you a list of numbers. Starsplit turns each group in
 ## Features
 
 - **iOS/macOS-inspired design**: system typography, automatic light/dark mode (plus a manual toggle), translucent nav bar with a collapsing large title, sliding segmented controls, iOS-style switches, a bottom-sheet editor, and spring animations. Uses the View Transitions API where supported and honours `prefers-reduced-motion`.
+- **Accounts**: sign up / log in with email and password. Passwords are hashed with scrypt, sessions are random tokens in an httpOnly, SameSite cookie (only a SHA-256 of the token is stored), login is rate-limited and timing-safe. Your groups are saved to your account; opening an invite code adds that group to it.
+- **Landing page** for visitors, and a personal dashboard of your groups once logged in.
 - **Manage people**: rename the group, add, rename or remove people (removal is blocked while someone is part of an expense).
 - **Undo** for deleted expenses and payments, a searchable ledger grouped by day, and an installable web app (manifest + icon).
 - Create a group ("constellation") with a shareable 6-character code. No sign-up needed.
@@ -55,8 +57,16 @@ npm test
 
 ## API
 
+Everything except `/api/auth/*` requires a logged-in session.
+
 | Method | Route | Purpose |
 |--------|-------|---------|
+| POST   | `/api/auth/signup` | Create account `{name, email, password}`, sets session cookie |
+| POST   | `/api/auth/login` | Log in `{email, password}` |
+| POST   | `/api/auth/logout` | End the session |
+| GET    | `/api/auth/me` | Current user or `null` |
+| GET    | `/api/me/groups` | Your groups with totals |
+| DELETE | `/api/me/groups/:code` | Remove a group from your account |
 | POST   | `/api/groups` | Create group `{name, currency, members[]}` → `{code}` |
 | GET    | `/api/groups/:code` | Members, ledger, balances, raw and simplified debts |
 | PATCH  | `/api/groups/:code` | Rename group `{name}` |
@@ -84,6 +94,7 @@ Production notes: per-IP rate limiting on writes, security headers, `trust proxy
 src/
   server.js      Entry point (listen, graceful shutdown)
   app.js         Express setup: headers, static files, error handling
+  auth.js        Accounts, password hashing, sessions
   routes.js      REST routes for groups, members and the ledger
   store.js       Prepared SQL queries + derived group state
   validate.js    Input cleaning and expense parsing

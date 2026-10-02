@@ -10,14 +10,52 @@ test.before(async () => {
 });
 test.after(() => server.close());
 
-const call = async (path, method = 'GET', body) => {
+let cookie = '';
+const call = async (path, method = 'GET', body, { jar = true } = {}) => {
   const res = await fetch(base + path, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(jar && cookie ? { Cookie: cookie } : {}) },
     body: body && JSON.stringify(body),
   });
-  return { status: res.status, data: await res.json() };
+  const set = res.headers.get('set-cookie');
+  if (jar && set) cookie = set.split(';')[0];
+  return { status: res.status, data: await res.json(), setCookie: set };
 };
+
+test('accounts: signup, me, logout, login, and the API is locked without a session', async () => {
+  assert.equal((await call('/groups', 'POST', { name: 'x', members: ['a', 'b'] }, { jar: false })).status, 401);
+
+  const weak = await call('/auth/signup', 'POST', { name: 'Ana', email: 'ana@example.com', password: 'short' });
+  assert.equal(weak.status, 400);
+  const up = await call('/auth/signup', 'POST', { name: 'Ana', email: 'Ana@Example.com', password: 'correct horse' });
+  assert.equal(up.status, 201);
+  assert.match(up.setCookie, /HttpOnly/i);
+  assert.equal((await call('/auth/me')).data.user.email, 'ana@example.com');
+  assert.equal((await call('/auth/signup', 'POST', { name: 'Ana', email: 'ana@example.com', password: 'correct horse' })).status, 409);
+
+  await call('/auth/logout', 'POST');
+  cookie = '';
+  assert.equal((await call('/auth/me')).data.user, null);
+  assert.equal((await call('/auth/login', 'POST', { email: 'ana@example.com', password: 'wrong pass' })).status, 401);
+  assert.equal((await call('/auth/login', 'POST', { email: 'ana@example.com', password: 'correct horse' })).status, 200);
+});
+
+test('groups are linked to the accounts that create or open them', async () => {
+  const { data } = await call('/groups', 'POST', { name: 'Mine', members: ['a', 'b'] });
+  const mine = (await call('/me/groups')).data.groups;
+  assert.ok(mine.some((g) => g.code === data.code));
+
+  // a second user sees it only after opening the invite code
+  const ana = cookie;
+  cookie = '';
+  await call('/auth/signup', 'POST', { name: 'Ben', email: 'ben@example.com', password: 'another one' });
+  assert.equal((await call('/me/groups')).data.groups.length, 0);
+  await call('/groups/' + data.code);
+  assert.equal((await call('/me/groups')).data.groups[0].code, data.code);
+  await call('/me/groups/' + data.code, 'DELETE');
+  assert.equal((await call('/me/groups')).data.groups.length, 0);
+  cookie = ana;
+});
 
 test('full flow: create, add expenses, settle, delete', async () => {
   const created = await call('/groups', 'POST', { name: 'Trip', currency: 'EUR', members: ['Ana', 'Ben', 'Cy'] });

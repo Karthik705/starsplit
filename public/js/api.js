@@ -10,6 +10,11 @@ export async function api(path, method = 'GET', body) {
     throw new Error('You seem to be offline');
   }
   const data = await res.json().catch(() => ({}));
+  if (res.status === 401 && !path.startsWith('/auth/')) {
+    // session expired: log in again and come back here afterwards
+    sessionStorage.setItem('starsplit:next', location.hash);
+    location.hash = '#/login';
+  }
   if (!res.ok) throw new Error(data.error || 'Something went wrong');
   return data;
 }

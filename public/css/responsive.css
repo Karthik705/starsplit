@@ -7,6 +7,10 @@
   .hero-art { order: -1; }
   .hero-sky { width: min(70%, 260px); }
   .stats { grid-template-columns: repeat(3, 1fr); }
+  .features { grid-template-columns: 1fr 1fr; }
+  .how-steps { grid-template-columns: 1fr; }
+  .auth { grid-template-columns: 1fr; gap: 0; min-height: 0; }
+  .auth-art .hero-sky { width: 180px; }
   .stats .main { grid-column: 1 / -1; }
   .bar-row { grid-template-columns: 90px 1fr; }
 }
@@ -24,6 +28,7 @@
   @keyframes sheet-down { to { transform: translateY(100%); } }
   .exp { grid-template-columns: 38px 1fr auto; }
   .exp .icon-btn { display: none; }
+  .features { grid-template-columns: 1fr; }
   .fab { display: grid; place-items: center; position: fixed; right: 18px; bottom: calc(80px + env(safe-area-inset-bottom)); z-index: 61; width: 56px; height: 56px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 1.6rem; box-shadow: 0 10px 30px color-mix(in srgb, var(--blue) 45%, transparent); transition: transform 0.3s var(--pop); }
   .fab:active { transform: scale(0.9); }
   .head-actions #new-exp { display: none; }

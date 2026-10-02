@@ -46,12 +46,28 @@ router.post('/groups', createLimit, (req, res) => {
     while (q.groupByCode.get(code)) code = newCode();
     const { lastInsertRowid: gid } = q.insGroup.run(code, name, currency);
     names.forEach((n, i) => q.insMember.run(gid, n, COLORS[i % COLORS.length]));
+    q.link.run(req.user.id, gid);
     return code;
   });
   res.status(201).json({ code });
 });
 
-router.get('/groups/:code', (req, res) => res.json(loadState(req.params.code)));
+// your groups, for the home page
+router.get('/me/groups', (req, res) => res.json({ groups: q.myGroups.all(req.user.id) }));
+
+// opening a group by its code is how invites work: it gets added to your account
+router.get('/groups/:code', (req, res) => {
+  const state = loadState(req.params.code);
+  q.link.run(req.user.id, state.group.id);
+  res.json(state);
+});
+
+// hide a group from your account (it keeps existing for everyone else)
+router.delete('/me/groups/:code', (req, res) => {
+  const { group } = loadState(req.params.code);
+  q.unlink.run(req.user.id, group.id);
+  res.json({ ok: true });
+});
 
 router.patch('/groups/:code', (req, res) => {
   const { group } = loadState(req.params.code);

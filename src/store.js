@@ -28,6 +28,16 @@ const q = {
   updExpense: db.prepare(
     "UPDATE expenses SET description = ?, amount_cents = ?, paid_by = ?, category = ?, spent_on = ? WHERE id = ? AND group_id = ? AND kind = 'expense'"
   ),
+  link: db.prepare('INSERT OR IGNORE INTO user_groups (user_id, group_id) VALUES (?, ?)'),
+  unlink: db.prepare('DELETE FROM user_groups WHERE user_id = ? AND group_id = ?'),
+  myGroups: db.prepare(
+    `SELECT g.code, g.name, g.currency,
+            (SELECT COUNT(*) FROM members m WHERE m.group_id = g.id) AS people,
+            (SELECT COALESCE(SUM(amount_cents), 0) FROM expenses e WHERE e.group_id = g.id AND e.kind = 'expense') AS total_cents,
+            (SELECT MAX(COALESCE(spent_on, date(created_at))) FROM expenses e WHERE e.group_id = g.id) AS last_activity
+     FROM user_groups ug JOIN groups g ON g.id = ug.group_id
+     WHERE ug.user_id = ? ORDER BY ug.joined_at DESC, g.id DESC`
+  ),
   insSplit: db.prepare('INSERT INTO splits (expense_id, member_id, share_cents) VALUES (?, ?, ?)'),
   delSplits: db.prepare('DELETE FROM splits WHERE expense_id = ?'),
   delExpense: db.prepare('DELETE FROM expenses WHERE id = ? AND group_id = ?'),

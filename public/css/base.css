@@ -75,3 +75,8 @@ main:focus { outline: none; }
 .brand-mark { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; color: #fff; font-size: 0.85rem; background: linear-gradient(145deg, #5ac8fa, #007aff 55%, #5e5ce6); }
 .site-footer { max-width: 1040px; margin: 0 auto; padding: 8px 20px calc(40px + env(safe-area-inset-bottom)); display: flex; gap: 8px 18px; flex-wrap: wrap; justify-content: space-between; font-size: 0.8rem; color: var(--label-3); }
 .site-footer a { color: var(--label-2); }
+
+.nav-right { justify-self: end; display: flex; align-items: center; gap: 6px; }
+.nav-avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 0.85rem; background: linear-gradient(145deg, #5ac8fa, #007aff 55%, #5e5ce6); transition: transform 0.2s var(--ease); }
+.nav-avatar:active { transform: scale(0.92); }
+.nav-avatar.big { width: 64px; height: 64px; font-size: 1.6rem; margin: 0 auto 12px; }

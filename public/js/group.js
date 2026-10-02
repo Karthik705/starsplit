@@ -1,7 +1,7 @@
 // Group page shell: header, stats, tabs. The active tab renders into #panel.
 import { api } from './api.js';
 import { state, enter, realExpenses } from './state.js';
-import { esc, money, recent } from './util.js';
+import { esc, money } from './util.js';
 import { $app, $modal, transition, toast, countTo, initSegs, selectSeg, hideTip } from './ui.js';
 import { setNav } from './nav.js';
 import { onChange, connectLive, isLive } from './actions.js';
@@ -23,7 +23,6 @@ export async function openGroup(code, tab) {
     state.g = next;
     state.shownTotal = 0;
     state.query = '';
-    recent.add(next.group.code, next.group.name);
     renderGroup();
   });
   connectLive(next.group.code, () => {
@@ -104,7 +103,6 @@ export function refresh() {
     name.textContent = state.g.group.name;
     document.getElementById('nav-title').textContent = state.g.group.name;
     document.title = `${state.g.group.name} · Starsplit`;
-    recent.add(state.g.group.code, state.g.group.name);
   }
   renderPanel(false);
 }

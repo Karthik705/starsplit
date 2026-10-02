@@ -41,6 +41,27 @@ db.exec(`
     PRIMARY KEY (expense_id, member_id)
   );
   CREATE INDEX IF NOT EXISTS idx_expenses_group ON expenses(group_id);
+
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL COLLATE NOCASE,
+    name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+  -- only a hash of the session token is stored, so a leaked database can't be used to log in
+  CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL
+  );
+  -- which groups show up in a user's account (creating or opening an invite adds it)
+  CREATE TABLE IF NOT EXISTS user_groups (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    group_id INTEGER NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, group_id)
+  );
 `);
 
 // Migration for databases created before expenses had a spend date.

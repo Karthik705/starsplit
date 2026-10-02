@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const routes = require('./routes');
 const { rateLimit } = require('./rate-limit');
+const auth = require('./auth');
 const { HttpError } = require('./errors');
 
 const app = express();
@@ -18,7 +19,9 @@ app.get('/healthz', (req, res) => res.json({ ok: true }));
 
 const writeLimit = rateLimit({ windowMs: 5 * 60 * 1000, max: 300 });
 app.use('/api', (req, res, next) => (req.method === 'GET' ? next() : writeLimit(req, res, next)));
-app.use('/api', routes);
+app.use('/api', auth.loadUser);
+app.use('/api/auth', auth.router);
+app.use('/api', auth.requireUser, routes);
 
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
 app.use((err, req, res, next) => {

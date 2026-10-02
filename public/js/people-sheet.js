@@ -1,6 +1,7 @@
 // "People & settings" sheet: rename the group, add, rename or remove people.
 import { state } from './state.js';
-import { esc, avatar, recent } from './util.js';
+import { esc, avatar } from './util.js';
+import { api } from './api.js';
 import { openSheet, closeSheet, confirmSheet } from './ui.js';
 import { mutate } from './actions.js';
 
@@ -40,8 +41,9 @@ export function openPeopleSheet() {
         ${members.length < MAX ? `<form class="add-row" id="add-person"><input name="name" placeholder="Add someone new" maxlength="24" required aria-label="New person's name"><button class="btn tinted">Add</button></form>` : ''}
         <p class="muted small sheet-note">Tap a name to rename it. People who are part of an expense can't be removed until those expenses are deleted.</p>
 
-        <div class="section-label">This device</div>
-        <button type="button" class="btn block gray" id="forget">Remove from my recent groups</button>
+        <div class="section-label">Your account</div>
+        <button type="button" class="btn block gray" id="forget">Remove from my groups</button>
+        <p class="muted small sheet-note">The group keeps working for everyone else. Open its code again to add it back.</p>
       </div>
     </div>`);
 
@@ -84,9 +86,9 @@ export function openPeopleSheet() {
     document.querySelector('#add-person input')?.focus();
   };
 
-  document.getElementById('forget').onclick = () => {
-    recent.remove(group.code);
+  document.getElementById('forget').onclick = async () => {
+    await api('/me/groups/' + group.code, 'DELETE');
     closeSheet();
-    location.hash = '';
+    location.hash = '#/';
   };
 }

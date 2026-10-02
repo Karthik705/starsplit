@@ -25,3 +25,35 @@
 .recent-link + .recent-link::before { content: ''; position: absolute; top: 0; left: 16px; right: 0; height: 0.5px; background: var(--sep); }
 .recent-link span:nth-child(2) { flex: 1; font-weight: 500; }
 
+
+/* landing */
+.features { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.feature h3 { font-size: 1.05rem; margin: 12px 0 6px; }
+.feature p { margin: 0; font-size: 0.9rem; line-height: 1.5; }
+.feature-ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; font-size: 1.35rem; background: color-mix(in srgb, var(--c) 16%, transparent); }
+.how { margin-top: 20px; }
+.how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 24px; margin-top: 8px; }
+.how-steps .step { display: flex; gap: 14px; padding: 10px 0; }
+.how-steps .step p { margin: 3px 0 0; }
+.cta-band { text-align: center; padding: 56px 0 24px; }
+.cta-band h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 18px; }
+
+/* auth */
+.auth { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; min-height: calc(100vh - 200px); padding: 20px 0; }
+.auth-art { display: grid; place-items: center; }
+.auth-card { max-width: 440px; width: 100%; justify-self: center; padding: 28px; }
+.auth-card h1 { font-size: 1.8rem; }
+.auth-card > p { margin: 6px 0 20px; }
+.auth-card .row-item > .lbl { min-width: 88px; }
+.form-error { min-height: 1.3em; margin: 12px 4px; color: var(--red); font-size: 0.9rem; }
+.auth-switch { text-align: center; margin: 16px 0 0; }
+
+/* dashboard */
+.dash-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin: 8px 0 22px; }
+.dash-head p { margin: 0 0 2px; }
+.group-cards { display: grid; gap: 12px; }
+.group-card { display: flex; align-items: center; gap: 14px; padding: 16px 18px; color: var(--label); transition: transform 0.25s var(--ease), box-shadow 0.25s; }
+.group-card:hover { transform: translateY(-2px); box-shadow: var(--shadow), 0 0 0 1.5px color-mix(in srgb, var(--blue) 40%, transparent); }
+.group-card-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.group-card-text b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.05rem; }
+.group-card-total { font-weight: 700; }

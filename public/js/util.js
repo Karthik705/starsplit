@@ -50,11 +50,6 @@ export function store(key, value) {
   return null;
 }
 
-export const recent = {
-  get: () => store('starsplit:recent') || [],
-  add(code, name) { store('starsplit:recent', [{ code, name }, ...this.get().filter((r) => r.code !== code)].slice(0, 6)); },
-  remove(code) { store('starsplit:recent', this.get().filter((r) => r.code !== code)); },
-};
 
 export const initial = (name) => esc(name.trim()[0]?.toUpperCase() || '?');
 export const avatar = (m, cls = '') => `<span class="avatar ${cls}" style="--c:${m.color}">${initial(m.name)}</span>`;

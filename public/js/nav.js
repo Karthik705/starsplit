@@ -1,6 +1,8 @@
 // Translucent navigation bar with a collapsing large title and the theme toggle.
-import { esc, store } from './util.js';
-import { $app, transition } from './ui.js';
+import { esc, store, initial } from './util.js';
+import { $app, transition, openSheet, closeSheet, toast } from './ui.js';
+import { state } from './state.js';
+import { api } from './api.js';
 
 const $nav = document.getElementById('nav');
 
@@ -13,7 +15,10 @@ export function setNav({ back = false, title = '' } = {}) {
   $nav.innerHTML = `<div class="nav-inner">
     ${back ? `<a class="nav-btn" href="#">${backSvg}Groups</a>` : '<a class="brand" href="#"><span class="brand-mark">✦</span>Starsplit</a>'}
     <div class="nav-title" id="nav-title">${esc(title)}</div>
-    <button class="nav-btn icon" id="theme" aria-label="Switch between light and dark mode">${isDark() ? sunSvg : moonSvg}</button>
+    <div class="nav-right">
+      <button class="nav-btn icon" id="theme" aria-label="Switch between light and dark mode">${isDark() ? sunSvg : moonSvg}</button>
+      ${state.user ? `<button class="nav-avatar" id="account" aria-label="Account">${initial(state.user.name)}</button>` : ''}
+    </div>
   </div>`;
   document.getElementById('theme').onclick = () => {
     const next = isDark() ? 'light' : 'dark';
@@ -23,7 +28,31 @@ export function setNav({ back = false, title = '' } = {}) {
       document.getElementById('theme').innerHTML = next === 'dark' ? sunSvg : moonSvg;
     });
   };
+  document.getElementById('account')?.addEventListener('click', openAccount);
   watchLargeTitle();
+}
+
+function openAccount() {
+  const u = state.user;
+  openSheet(`
+    <div class="alert account">
+      <span class="nav-avatar big">${initial(u.name)}</span>
+      <h2>${esc(u.name)}</h2>
+      <p>${esc(u.email)}</p>
+      <div class="alert-actions">
+        <button type="button" class="btn gray" id="acc-close">Close</button>
+        <button type="button" class="btn danger" id="logout">Log out</button>
+      </div>
+    </div>`, { small: true });
+  document.getElementById('acc-close').onclick = closeSheet;
+  document.getElementById('logout').onclick = async () => {
+    await api('/auth/logout', 'POST').catch(() => {});
+    state.user = null;
+    closeSheet();
+    toast('Logged out');
+    if (location.hash === '#/') dispatchEvent(new HashChangeEvent('hashchange'));
+    else location.hash = '#/';
+  };
 }
 addEventListener('scroll', () => $nav.classList.toggle('scrolled', scrollY > 6), { passive: true });
 
