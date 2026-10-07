@@ -88,3 +88,33 @@ svg.constellation { width: 100%; height: auto; display: block; max-height: 460px
 .empty .big-emoji { font-size: 2.4rem; display: block; margin-bottom: 6px; animation: float 3s ease-in-out infinite; }
 @keyframes float { 50% { transform: translateY(-6px); } }
 
+
+/* circles of the optimal plan */
+:root { --circle-0: #5e5ce6; --circle-1: #ff9f0a; --circle-2: #30d158; --circle-3: #ff375f; --circle-4: #64d2ff; --circle-5: #bf5af2; }
+.nebula circle { transition: opacity 0.4s; }
+.nebula-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; text-anchor: middle; }
+.star-g.settled { opacity: 0.55; }
+.star-g.hot .core { animation: hot 0.9s var(--pop); transform-box: fill-box; transform-origin: center; }
+@keyframes hot { 30% { transform: scale(1.35); } }
+.greedy-note { margin: 4px auto 0; max-width: 420px; text-align: center; font-size: 0.8rem; color: var(--label-2); min-height: 0; }
+.greedy-note:not(:empty)::before { content: '✦ '; color: var(--blue); }
+.drag-hint { text-align: center; margin: 10px 0 0; }
+.circle-head { display: flex; align-items: center; gap: 8px; padding: 14px 4px 2px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.circle-head .muted { text-transform: none; letter-spacing: 0; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.circle-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--k); box-shadow: 0 0 10px var(--k); flex: none; }
+.circle-head + .pay::before { display: none; }
+
+/* time machine */
+.tm { display: flex; align-items: center; gap: 12px; margin: 14px 0 0; padding: 10px 14px; border-radius: 16px; background: var(--card-2); }
+.tm-play { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--blue); color: #fff; transition: transform 0.2s var(--pop); }
+.tm-play:active { transform: scale(0.9); }
+.tm-play:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.tm-track { flex: 1; min-width: 0; }
+.tm input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; padding: 0; border-radius: 2px; background: linear-gradient(90deg, var(--blue) var(--p, 100%), var(--fill-2) var(--p, 100%)); cursor: pointer; }
+.tm input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); }
+.tm input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35); }
+.tm input[type=range]:focus { box-shadow: none; }
+.tm-label { margin-top: 6px; font-size: 0.8rem; color: var(--label-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tm-label b { color: var(--label); }
+.sky-card.replaying #pay-list, .sky-card.replaying #copy-plan { opacity: 0.35; pointer-events: none; filter: saturate(0.4); transition: opacity 0.3s; }
+.sky-card.replaying #sky { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--blue) 35%, transparent); }

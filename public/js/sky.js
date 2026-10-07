@@ -1,17 +1,19 @@
 // "Sky" tab: the constellation, who pays whom, balances and the ledger.
 import { state, enter, memberOf } from './state.js';
-import { CATEGORIES, catColor, esc, money, niceDate, dayLabel, plural, avatar, store, reduceMotion } from './util.js';
+import { CATEGORIES, catColor, esc, money, niceDate, dayLabel, avatar, store, reduceMotion } from './util.js';
 import { toast, toastError, selectSeg, confirmSheet } from './ui.js';
 import { deleteEntry, settle } from './actions.js';
-import { constellation, bindDrag, layoutKey } from './constellation.js';
+import { constellation, bindDrag, layoutKey, caption, greedyNote, glideTo, setFrame } from './constellation.js';
+import { timeMachineHTML, bindTimeMachine } from './timeline.js';
 import { openExpenseSheet } from './expense-sheet.js';
 
 export function skyHTML() {
   const { g } = state;
+  setFrame(null); // always open on the present
   return `
     <div class="layout">
       <div class="col">
-        <section class="card"${enter(0)}>
+        <section class="card sky-card" id="sky-card"${enter(0)}>
           <div class="card-head">
             <h2>The constellation</h2>
             <div class="seg" id="mode-seg" role="group" aria-label="Debt view">
@@ -20,7 +22,10 @@ export function skyHTML() {
             </div>
           </div>
           <div id="sky">${constellation(state.anim ? 'first' : 'static')}</div>
-          <p class="sky-caption"><span id="caption">${caption()}</span><br><span class="muted small">Drag the stars to rearrange · <button class="linkish" id="reset-layout">reset</button></span></p>
+          <p class="sky-caption"><span id="caption">${caption()}</span></p>
+          <p class="greedy-note" id="greedy-note">${greedyNote()}</p>
+          ${timeMachineHTML()}
+          <p class="muted small drag-hint">Drag the stars to rearrange · <button class="linkish" id="reset-layout">reset</button></p>
           <div class="pay-list" id="pay-list">${payList()}</div>
           ${g.debts.simplified.length ? `<button class="btn tinted sm" id="copy-plan" style="margin-top:12px">Copy settle-up message</button>` : ''}
         </section>
@@ -106,22 +111,21 @@ function expenseRow(e, i) {
     <div class="amt">${money(e.amount_cents)}</div><button class="icon-btn" data-del="${e.id}" aria-label="Delete ${esc(e.description)}">✕</button></div>`;
 }
 
-function caption() {
-  const { g } = state;
-  const raw = g.debts.raw.length, simple = g.debts.simplified.length;
-  if (!raw && !simple) return g.expenses.length ? 'Everyone is square ✨' : 'No debts yet. Add an expense to see the sky change.';
-  if (state.mode === 'raw') return `${plural(raw, 'payment')} if everyone paid back directly`;
-  const saved = raw - simple;
-  return `Only ${plural(simple, 'payment')} needed${saved > 0 ? `, ${saved} fewer!` : ''}`;
+function payRow(d) {
+  const a = memberOf(d.from), b = memberOf(d.to);
+  return `<div class="pay"><span class="who">${avatar(a, 'sm')}${esc(a.name)}<span class="arrow">→</span>${avatar(b, 'sm')}${esc(b.name)}</span>
+    <span class="right"><b>${money(d.amount_cents)}</b>
+    <button class="btn tinted sm" data-settle="${d.from},${d.to},${d.amount_cents}">Mark paid</button></span></div>`;
 }
 
+/** Payments to make. In the Untangled view they're grouped by the circle that settles them. */
 function payList() {
-  const edges = state.mode === 'raw' ? state.g.debts.raw : state.g.debts.simplified;
-  return edges.map((d) => {
-    const a = memberOf(d.from), b = memberOf(d.to);
-    return `<div class="pay"><span class="who">${avatar(a, 'sm')}${esc(a.name)}<span class="arrow">→</span>${avatar(b, 'sm')}${esc(b.name)}</span>
-      <span class="right"><b>${money(d.amount_cents)}</b>
-      <button class="btn tinted sm" data-settle="${d.from},${d.to},${d.amount_cents}">Mark paid</button></span></div>`;
+  const { debts } = state.g;
+  if (state.mode === 'raw' || debts.circles.length < 2) return (state.mode === 'raw' ? debts.raw : debts.simplified).map(payRow).join('');
+  return debts.circles.map((ids, i) => {
+    const inCircle = debts.simplified.filter((d) => ids.includes(d.from));
+    const names = ids.map((id) => esc(memberOf(id).name)).join(', ');
+    return `<div class="circle-head"><span class="circle-dot" style="--k:var(--circle-${i % 6})"></span>Circle ${i + 1}<span class="muted small">${names}</span></div>${inCircle.map(payRow).join('')}`;
   }).join('');
 }
 
@@ -149,6 +153,11 @@ function exportCSV() {
   URL.revokeObjectURL(a.href);
 }
 
+function paintText() {
+  document.getElementById('caption').textContent = caption();
+  document.getElementById('greedy-note').textContent = greedyNote();
+}
+
 export function bindSky() {
   const seg = document.getElementById('mode-seg');
   seg.onclick = (e) => {
@@ -156,16 +165,22 @@ export function bindSky() {
     if (!b || b.dataset.mode === state.mode) return;
     state.mode = b.dataset.mode;
     selectSeg(seg, b);
-    // collapse the current lines, then draw the new set
+    // collapse the current lines, glide the stars into place, then draw the new set
     const sky = document.getElementById('sky');
     sky.classList.add('morphing');
     setTimeout(() => {
       sky.classList.remove('morphing');
-      sky.innerHTML = constellation('toggle');
-      document.getElementById('caption').textContent = caption();
+      glideTo(sky);
+      paintText();
       document.getElementById('pay-list').innerHTML = payList();
-    }, reduceMotion ? 0 : 260);
+    }, reduceMotion ? 0 : 220);
   };
+  bindTimeMachine((frame, hot) => {
+    setFrame(frame);
+    document.getElementById('sky-card').classList.toggle('replaying', Boolean(frame));
+    document.getElementById('sky').innerHTML = constellation(frame ? 'drag' : 'static', { hot });
+    paintText();
+  });
   document.getElementById('new-exp').onclick = () => openExpenseSheet();
   document.getElementById('export').onclick = exportCSV;
   document.getElementById('copy-plan')?.addEventListener('click', copyPlan);

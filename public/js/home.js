@@ -131,16 +131,18 @@ async function createDemo() {
     const day = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return isoDay(d); };
     const add = (description, amount, paidBy, split, category, date, splitType = 'equal') =>
       api(`/groups/${code}/expenses`, 'POST', { description, amount, paidBy, category, date, splitType, split: Object.fromEntries(split.map(([id, v]) => [id, v ?? 1])) });
+    // Chosen so the group splits into two circles that settle independently:
+    // a greedy settle-up needs 4 payments here, the exact plan needs 3.
     const all = [a, m, r, i, k].map((id) => [id]);
-    await add('Beach villa (3 nights)', 18000, a, all, 'stay', day(5));
-    await add('Airport cab', 2100, r, all, 'travel', day(5));
-    await add('Seafood dinner', 4200, m, [[a], [m], [r], [i]], 'food', day(4));
-    await add('Scooter rentals', 2400, r, [[r], [i], [k]], 'travel', day(3));
-    await add('Water sports', 6500, i, [[a], [m], [i], [k]], 'fun', day(3));
-    await add('Groceries', 1800, k, [[a], [r], [k]], 'groceries', day(2));
-    await add('Bar tab (Kabir skipped)', 3600, a, [[a, 1], [m, 1], [r, 2], [i, 1]], 'fun', day(2), 'shares');
-    await add('Farewell brunch', 5000, m, [[a, 40], [m, 20], [r, 20], [i, 20]], 'food', day(0), 'percent');
+    await add('Beach villa (3 nights)', 12000, i, all, 'stay', day(5));
+    await add('Airport cab', 1200, r, [[r], [k]], 'travel', day(5));
+    await add('Seafood dinner', 3600, a, [[a], [m], [r], [i]], 'food', day(4));
+    await add('Scooter rentals', 1800, i, [[a], [r], [i]], 'travel', day(3));
+    await add('Water sports', 4800, a, [[a], [m], [r], [i]], 'fun', day(3));
+    await add('Groceries', 1200, i, [[i], [k]], 'groceries', day(2));
+    await add('Club night (Kabir skipped)', 4800, a, [[a], [m], [r], [i]], 'fun', day(1));
+    await add('Farewell brunch', 3600, i, [[m], [i], [k]], 'food', day(0));
     location.hash = '#/g/' + code;
-    toast('Demo trip ready. Try the Untangled toggle ✦');
+    toast('Demo ready. Flip to Untangled, then press ▶ to replay the trip ✦');
   } catch (err) { toastError(err.message); btn.disabled = false; btn.textContent = '✦ Try a demo trip'; }
 }

@@ -23,10 +23,10 @@ export function heroSky() {
 }
 
 const FEATURES = [
-  ['🪢', 'Untangle the debts', 'A min-cash-flow algorithm turns a web of IOUs into the fewest payments, at most one fewer than the number of people.', 'var(--blue)'],
+  ['🪢', 'The provably fewest payments', 'Most apps settle up greedily. Starsplit searches every way your group splits into self-settling circles and finds the true minimum.', 'var(--blue)'],
   ['➗', 'Split any way', 'Equally, exact amounts, percentages or shares, with live previews that always add up to the cent.', 'var(--purple)'],
   ['⚡', 'Live with friends', 'Share a 6-letter code. Everyone sees changes instantly, on any device.', 'var(--orange)'],
-  ['📊', 'Insights & Wrapped', 'See where the money went, and hand out awards like “The Backbone” at the end of the trip.', 'var(--green)'],
+  ['⏪', 'A time machine for the trip', 'Replay the ledger and watch the debts form day by day, then hand out Wrapped awards like “The Backbone”.', 'var(--green)'],
 ];
 
 const STEPS = [

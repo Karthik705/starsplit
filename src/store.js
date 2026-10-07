@@ -1,6 +1,6 @@
 // Data access for groups and the derived state the API returns.
 const { db } = require('./db');
-const { computeNet, pairwiseDebts, simplify } = require('./balance');
+const { deriveDebts } = require('./balance');
 const { notFound } = require('./errors');
 
 const findGroup = (code) => db.get('SELECT * FROM groups WHERE code = ?', [String(code).toUpperCase()]);
@@ -22,15 +22,13 @@ async function loadState(code) {
   const byId = new Map(expenses.map((e) => [e.id, e]));
   for (const s of splits) byId.get(s.expense_id)?.splits.push({ member_id: s.member_id, share_cents: s.share_cents });
 
-  const net = computeNet(members, expenses);
-  const simplified = simplify(net);
+  const { net, debts } = deriveDebts(members, expenses);
   return {
     group: { id: group.id, code: group.code, name: group.name, currency: group.currency },
     members,
     expenses,
     net,
-    // once everyone nets to zero nothing is owed, so the tangled view is empty too
-    debts: { raw: simplified.length ? pairwiseDebts(expenses) : [], simplified },
+    debts,
     totalSpent: expenses.filter((e) => e.kind === 'expense').reduce((a, e) => a + e.amount_cents, 0),
   };
 }

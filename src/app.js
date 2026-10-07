@@ -14,7 +14,12 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.json({ limit: '20kb' }));
-app.use(express.static(path.join(__dirname, '..', 'public'), { maxAge: '5m' }));
+// Front-end files are unbundled ES modules, so a browser must never mix old and new
+// versions after a deploy: always revalidate (cheap, thanks to ETags) instead of caching blindly.
+const fresh = { setHeaders: (res) => res.set('Cache-Control', 'no-cache') };
+app.use(express.static(path.join(__dirname, '..', 'public'), fresh));
+// the ledger maths, shared with the browser so the time machine replays exactly what the server computes
+app.use('/shared', express.static(path.join(__dirname, 'shared'), fresh));
 app.get('/healthz', (req, res) => res.json({ ok: true }));
 
 const writeLimit = rateLimit({ windowMs: 5 * 60 * 1000, max: 300 });

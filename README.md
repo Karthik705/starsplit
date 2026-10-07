@@ -8,6 +8,22 @@ Most expense splitters show you a list of numbers. Starsplit turns each group in
 
 ![Insights](docs/insights.png)
 
+## What makes it different
+
+**1. The provably fewest payments.** Most expense apps settle up *greedily*: match the biggest debtor with the biggest creditor, repeat. That never needs more than *n − 1* payments, but it often isn't the minimum. Starsplit computes the **exact optimum**.
+
+The key observation: if the *k* people with a non-zero balance can be split into *m* groups whose balances each sum to zero, every group can settle on its own in *(size − 1)* payments, for *k − m* in total, and no plan can do better. So the minimum number of payments is *k − (largest zero-sum partition)*. That problem is NP-hard in general, but a group has at most 12 people, so a DP over all 2^k subsets solves it exactly in milliseconds:
+
+```
+dp[mask] = max over i in mask of dp[mask without i]   (+1 if mask's balances sum to 0)
+```
+
+Walking back from the full set, the zero-sum masks along the best path are nested; their differences are the groups. See [`settlePlan` in src/shared/ledger.mjs](src/shared/ledger.mjs). The tests check it against a brute-force search on 300 random ledgers, and show a case where greedy needs 4 payments and Starsplit needs 3.
+
+**2. The sky splits into circles.** Those zero-sum groups are shown, not just computed. In the *Untangled* view each one becomes its own sub-constellation inside a coloured nebula, and the payment list is grouped by circle: "Rohan, Isha and Kabir can settle among themselves." The demo trip is built so that greedy would need 4 payments and the app shows why 3 is enough.
+
+**3. A time machine for the ledger.** Balances are never stored: they're derived from the ledger (expenses + payments), the single source of truth. So any moment of the trip can be rebuilt exactly. Press ▶ under the constellation, or scrub the slider, and watch the debts form entry by entry. The browser imports the *same* `ledger.mjs` module the server runs, so the replay can't disagree with the server.
+
 ## Features
 
 - **iOS/macOS-inspired design**: system typography, automatic light/dark mode (plus a manual toggle), translucent nav bar with a collapsing large title, sliding segmented controls, iOS-style switches, a bottom-sheet editor, and spring animations. Uses the View Transitions API where supported and honours `prefers-reduced-motion`.
@@ -52,7 +68,7 @@ npm test
 - **Charts are hand-written SVG.** Category colours come from a palette checked for colour-blind separation and contrast on the dark background; every chart has hover tooltips and its numbers are also shown as text.
 - **Balance** = what you paid − your share of everything. Balances always sum to zero.
 - **Tangled view**: direct pairwise debts, netted per pair.
-- **Untangled view**: greedy min-cash-flow. Match the biggest debtor with the biggest creditor until everyone is at zero, giving at most *n − 1* payments.
+- **Untangled view**: the exact minimum number of payments (see *What makes it different*), with greedy min-cash-flow used inside each circle and as a fallback above 18 people.
 - **Settling up** is stored as a `payment` entry, so balances stay derived from one source of truth (the ledger) and deleting an entry just works.
 - Multi-step writes (expense + its splits) run in a SQL transaction; the server validates all input and returns clear 4xx errors.
 
@@ -113,14 +129,16 @@ src/
   routes.js      REST routes for groups, members and the ledger
   store.js       Prepared SQL queries + derived group state
   validate.js    Input cleaning and expense parsing
-  balance.js     Pure money logic (split, balances, simplify)
+  shared/ledger.mjs  Pure money logic: splits, balances, exact settle-up (shared with the browser)
+  balance.js     CommonJS re-export of shared/ledger.mjs
   live.js        Server-sent events rooms
   db.js          SQLite schema + transaction helper
 public/
   index.html     Shell
   css/           tokens, base, components, home, group, charts, sheet, responsive
   js/            ES modules: main (router), home, group, sky, constellation,
-                 insights, wrapped, expense-sheet, people-sheet, actions, ui, util
+                 timeline (time machine), insights, wrapped, expense-sheet,
+                 people-sheet, landing, auth-page, actions, ui, util
 test/            balance.test.js, api.test.js
 ```
 
