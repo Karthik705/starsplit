@@ -5,6 +5,7 @@
 .hero p { max-width: 520px; margin: 16px 0 26px; color: var(--label-2); font-size: 1.12rem; line-height: 1.55; }
 .eyebrow { display: inline-flex; padding: 6px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; color: var(--blue); background: color-mix(in srgb, var(--blue) 12%, transparent); }
 .hero-cta { display: flex; gap: 10px; flex-wrap: wrap; }
+.guest-cta { margin-top: 12px; }
 .hero-art { position: relative; display: grid; place-items: center; }
 .hero-art::before { content: ''; position: absolute; inset: 6% 10%; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--blue) 22%, transparent), transparent 70%); filter: blur(20px); }
 .hero-sky { position: relative; width: min(100%, 380px); height: auto; overflow: visible; }

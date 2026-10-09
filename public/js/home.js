@@ -117,11 +117,12 @@ function bindHome() {
     e.preventDefault();
     location.hash = '#/g/' + e.target.code.value.trim().toUpperCase();
   };
-  document.getElementById('demo').onclick = createDemo;
+  document.getElementById('demo').onclick = (e) => createDemo(e.currentTarget);
 }
 
-async function createDemo() {
-  const btn = document.getElementById('demo');
+/** Builds the "Goa Trip" demo group and opens it. Also used by the landing page's guest button. */
+export async function createDemo(btn) {
+  const label = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'Lighting up the sky…';
   try {
@@ -144,5 +145,5 @@ async function createDemo() {
     await add('Farewell brunch', 3600, i, [[m], [i], [k]], 'food', day(0));
     location.hash = '#/g/' + code;
     toast('Demo ready. Flip to Untangled, then press ▶ to replay the trip ✦');
-  } catch (err) { toastError(err.message); btn.disabled = false; btn.textContent = '✦ Try a demo trip'; }
+  } catch (err) { toastError(err.message); btn.disabled = false; btn.textContent = label; }
 }

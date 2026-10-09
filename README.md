@@ -1,5 +1,9 @@
 # ✦ Starsplit
 
+[![Tests](https://github.com/Karthik705/starsplit/actions/workflows/tests.yml/badge.svg)](https://github.com/Karthik705/starsplit/actions/workflows/tests.yml)
+
+**Live demo:** [starsplit.onrender.com](https://starsplit.onrender.com) (click **Explore a demo trip, no sign-up** to land in a populated group as a guest; on the free tier the first visit after a quiet period takes about a minute to wake the server)
+
 Split expenses with friends, and watch the tangled web of IOUs **untangle into a constellation**.
 
 Most expense splitters show you a list of numbers. Starsplit turns each group into a night sky: every person is a star, every debt is a glowing line flowing from debtor to creditor. Flip the **Tangled ↔ Untangled** toggle and the raw who-owes-who web collapses into the minimum number of payments that settles everyone.
@@ -29,10 +33,10 @@ Walking back from the full set, the zero-sum masks along the best path are neste
 - **iOS/macOS-inspired design**: system typography, automatic light/dark mode (plus a manual toggle), translucent nav bar with a collapsing large title, sliding segmented controls, iOS-style switches, a bottom-sheet editor, and spring animations. Uses the View Transitions API where supported and honours `prefers-reduced-motion`.
 - **Accounts**: sign up / log in with email and password. Passwords are hashed with scrypt, sessions are random tokens in an httpOnly, SameSite cookie (only a SHA-256 of the token is stored), login is rate-limited and timing-safe. Your groups are saved to your account; opening an invite code adds that group to it.
 - **Sign in with Google** (OAuth 2.0 authorization-code flow with a state cookie, no SDK) and **forgot password** (single-use, 30-minute reset links emailed via Resend; resetting signs out all other sessions).
-- **Landing page** for visitors, and a personal dashboard of your groups once logged in.
+- **Landing page** for visitors, with a one-click **guest demo** (a throwaway 2-day guest account, no password), and a personal dashboard of your groups once logged in.
 - **Manage people**: rename the group, add, rename or remove people (removal is blocked while someone is part of an expense).
 - **Undo** for deleted expenses and payments, a searchable ledger grouped by day, and an installable web app (manifest + icon).
-- Create a group ("constellation") with a shareable 6-character code. No sign-up needed.
+- Create a group ("constellation") with a shareable 6-character code that friends can open to join.
 - **Four ways to split**: equally, exact amounts, percentages, or shares (e.g. 2 nights vs 1 night), with live per-person previews. Edit any expense afterwards.
 - **Interactive constellation**: drag the stars around; comets flow along each debt; star size and glow reflect balance. Layout is remembered per group.
 - **Tangled ↔ Untangled** toggle: raw who-owes-who vs. the minimum set of payments (min-cash-flow).
@@ -59,12 +63,12 @@ Requires **Node 22.13+**.
 ```bash
 npm install
 npm start        # http://localhost:3000
-npm test
+npm test         # 20 tests: money logic (incl. brute-force check of the exact settle-up) and the HTTP API
 ```
 
 ## How it works
 
-- **Money is stored as integer cents** so there is no floating-point drift. Every split mode goes through one largest-remainder allocator, so shares always sum exactly to the total ([balance.js](balance.js)).
+- **Money is stored as integer cents** so there is no floating-point drift. Every split mode goes through one largest-remainder allocator, so shares always sum exactly to the total ([src/shared/ledger.mjs](src/shared/ledger.mjs)).
 - **Charts are hand-written SVG.** Category colours come from a palette checked for colour-blind separation and contrast on the dark background; every chart has hover tooltips and its numbers are also shown as text.
 - **Balance** = what you paid − your share of everything. Balances always sum to zero.
 - **Tangled view**: direct pairwise debts, netted per pair.
@@ -83,6 +87,7 @@ Everything except `/api/auth/*` requires a logged-in session.
 | POST   | `/api/auth/logout` | End the session |
 | POST   | `/api/auth/forgot` | Email a reset link `{email}` (same answer whether or not the account exists) |
 | POST   | `/api/auth/reset` | Set a new password `{token, password}` |
+| POST   | `/api/auth/guest` | Start a 2-day guest session (rate-limited), used by the landing page demo |
 | GET    | `/api/auth/google` | Start Sign in with Google |
 | GET    | `/api/auth/me` | Current user or `null` |
 | GET    | `/api/me/groups` | Your groups with totals |
@@ -112,9 +117,9 @@ All optional locally (see `.env.example`):
 
 ## Deploy
 
-The app is a single Node process with a SQLite file, so any host that runs Node works.
+The app is a single Node process. It uses a hosted libSQL database (Turso) when `TURSO_DATABASE_URL` is set and a local SQLite file otherwise, so any host that runs Node works.
 
-- **Render**: `render.yaml` is included (free plan, health check at `/healthz`). Note that the free plan has an ephemeral disk, so data resets on redeploy; attach a persistent disk and set `DB_FILE=/var/data/starsplit.db` to keep it.
+- **Render**: `render.yaml` is included (free plan, health check at `/healthz`). With `TURSO_DATABASE_URL` set, data lives in Turso and survives redeploys on Render's ephemeral disk; without it, attach a persistent disk and set `DB_FILE=/var/data/starsplit.db`.
 - **Docker**: `docker build -t starsplit . && docker run -p 3000:3000 -v starsplit-data:/data starsplit`
 
 Production notes: per-IP rate limiting on writes, security headers, `trust proxy` for correct client IPs, and SSE responses are unbuffered so live sync works behind proxies.
@@ -144,4 +149,8 @@ test/            balance.test.js, api.test.js
 
 ## Ideas for next steps
 
-Multi-currency groups, receipt photos, optional accounts, offline queueing of edits.
+Multi-currency groups, receipt photos, offline queueing of edits.
+
+## License
+
+MIT, see [LICENSE](LICENSE).

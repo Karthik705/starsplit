@@ -2,6 +2,9 @@
 import { state, enter } from './state.js';
 import { $app } from './ui.js';
 import { setNav } from './nav.js';
+import { api } from './api.js';
+import { createDemo } from './home.js';
+import { toastError } from './ui.js';
 
 /** Decorative constellation: five stars, comets flowing along the debts. */
 export function heroSky() {
@@ -50,6 +53,7 @@ export function renderLanding() {
           <a class="btn big" href="#/signup">Get started, it’s free</a>
           <a class="btn big gray" href="#/login">Log in</a>
         </div>
+        <p class="guest-cta"${enter(4)}><button class="btn tinted" id="guest-demo">✦ Explore a demo trip, no sign-up</button></p>
       </div>
       <div class="hero-art"${enter(2)}>${heroSky()}</div>
     </section>
@@ -69,5 +73,18 @@ export function renderLanding() {
       <h2>Ready for your next trip?</h2>
       <a class="btn big" href="#/signup">Create your free account</a>
     </section>`;
+  document.getElementById('guest-demo').onclick = startGuestDemo;
   state.anim = false;
+}
+
+/** One click from the landing page to a populated demo group, as a guest. */
+async function startGuestDemo(e) {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  try {
+    const { user } = await api('/auth/guest', 'POST');
+    state.user = user;
+    setNav();
+    await createDemo(btn);
+  } catch (err) { toastError(err.message); btn.disabled = false; }
 }

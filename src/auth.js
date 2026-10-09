@@ -61,9 +61,9 @@ function readCookie(req, name) {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
-async function startSession(res, userId) {
+async function startSession(res, userId, days = SESSION_DAYS) {
   const token = newToken();
-  const maxAge = SESSION_DAYS * 864e5;
+  const maxAge = days * 864e5;
   await db.run('INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)', [sha(token), userId, Date.now() + maxAge]);
   res.cookie(COOKIE, token, { httpOnly: true, sameSite: 'lax', secure, maxAge, path: '/' });
 }
@@ -120,11 +120,23 @@ router.post('/login', authLimit, h(async (req, res) => {
   const user = await userByEmail(email);
   const ok = await checkPassword(password, user ? user.password_hash : await dummyHash);
   if (!user || !ok) {
-    if (user && !user.password_hash) throw new HttpError(401, 'This account uses Google. Continue with Google, or reset your password to add one.');
+    if (user && !user.password_hash && !user.email.endsWith('@guest.starsplit')) throw new HttpError(401, 'This account uses Google. Continue with Google, or reset your password to add one.');
     throw new HttpError(401, 'Wrong email or password');
   }
   await startSession(res, user.id);
   res.json({ user: publicUser(user) });
+}));
+
+// Guest access: a throwaway account so visitors (and recruiters) can try the app
+// without signing up. Guests have no password, so the session cookie is the only
+// way back in; the account and its sessions expire like any other session.
+const guestLimit = rateLimit({ windowMs: 60 * 60 * 1000, max: 10 });
+const GUEST_DAYS = 2;
+router.post('/guest', guestLimit, h(async (req, res) => {
+  const email = `guest-${crypto.randomBytes(8).toString('hex')}@guest.starsplit`;
+  const { lastId: id } = await db.run('INSERT INTO users (email, name, password_hash) VALUES (?, ?, ?)', [email, 'Guest', '']);
+  await startSession(res, id, GUEST_DAYS);
+  res.status(201).json({ user: { id, email, name: 'Guest' } });
 }));
 
 router.post('/logout', h(async (req, res) => {

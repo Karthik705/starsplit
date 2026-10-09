@@ -185,3 +185,21 @@ test('rename the group, rename and remove people', async () => {
   // and the group never drops below two people
   assert.equal((await call(`/groups/${code}/members/${a}`, 'DELETE')).status, 400);
 });
+
+test('guest access: one call gives a working session, and a guest cannot be logged into by password', async () => {
+  const before = cookie;
+  cookie = '';
+  const g = await call('/auth/guest', 'POST');
+  assert.equal(g.status, 201);
+  assert.equal(g.data.user.name, 'Guest');
+  assert.match(g.setCookie, /HttpOnly/i);
+  assert.equal((await call('/auth/me')).data.user.name, 'Guest');
+  const made = await call('/groups', 'POST', { name: 'Demo', currency: 'INR', members: ['A', 'B'] });
+  assert.equal(made.status, 201);
+  assert.equal((await call('/me/groups')).data.groups.length, 1);
+  cookie = '';
+  const login = await call('/auth/login', 'POST', { email: g.data.user.email, password: '' });
+  assert.equal(login.status, 401);
+  assert.equal(login.data.error, 'Wrong email or password');
+  cookie = before;
+});
