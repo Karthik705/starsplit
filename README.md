@@ -8,9 +8,11 @@ Split expenses with friends, and watch the tangled web of IOUs **untangle into a
 
 Most expense splitters show you a list of numbers. Starsplit turns each group into a night sky: every person is a star, every debt is a glowing line flowing from debtor to creditor. Flip the **Tangled ↔ Untangled** toggle and the raw who-owes-who web collapses into the minimum number of payments that settles everyone.
 
-![Group view](docs/group.png)
+![Untangled view: the demo trip settles in 3 payments across 2 independent circles](docs/group.png)
 
-![Insights](docs/insights.png)
+| Landing page | Insights |
+|---|---|
+| ![Landing page](docs/landing.png) | ![Insights](docs/insights.png) |
 
 ## What makes it different
 
